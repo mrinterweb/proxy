@@ -5,8 +5,8 @@ defmodule Proxy.Mixfile do
     [app: :proxy,
      version: "0.0.1",
      elixir: "~> 1.0",
-     deps: deps,
-     aliases: aliases]
+     deps: deps(),
+     aliases: aliases()]
   end
 
   # Some command line aliases
@@ -31,8 +31,8 @@ defmodule Proxy.Mixfile do
   #
   # Type `mix help deps` for more examples and options
   defp deps do
-    [{:cowboy, "~> 1.0.0"},
-     {:plug, "~> 0.11.1"},
-     {:hackney, "~> 1.1.0"}]
+    [{:cowboy, "~> 1.1.2"},
+     {:plug, "~> 1.3.5"},
+     {:httpoison, "~> 0.12"}]
   end
 end
