@@ -33,6 +33,9 @@ defmodule Proxy.Mixfile do
   defp deps do
     [{:cowboy, "~> 1.1.2"},
      {:plug, "~> 1.3.5"},
-     {:httpoison, "~> 0.12"}]
+     {:httpoison, "~> 0.12"},
+     {:floki, "~> 0.18.0"},
+     {:html5ever, "~> 0.5.0"}
+    ]
   end
 end

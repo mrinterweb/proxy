@@ -22,8 +22,7 @@ defmodule Proxy do
     # We are simply passing all req_headers forward.
     url = uri(conn)
     response = case HTTPoison.get(url, [], [{:follow_redirect, true}]) do
-      {:ok, response} ->
-        response
+      {:ok, response} -> response
       {:error, %HTTPoison.Error{reason: reason}} ->
         IO.inspect reason
         %{headers: nil, status: 404, body: "<html><body><h1>Not found</h1></body></html>"}
@@ -37,7 +36,8 @@ defmodule Proxy do
                 |> List.insert_at(0, {"Location", "http://localhost:4001"})
       %{conn | resp_headers: headers}
     end
-    send_resp(conn, response.status_code, response.body)
+    parsed = update_html(response.body)
+    send_resp(conn, response.status_code, parsed)
   end
 
   defp uri(conn) do
@@ -47,5 +47,33 @@ defmodule Proxy do
       qs -> base <> "?" <> qs
     end
     base
+  end
+
+  def update_html(html) do
+    parsed = html |> Floki.parse
+
+    # Itterate over domains to replace
+    ["bbc.com"]
+      |> Enum.reduce(html, fn(domain, accum1) ->
+        {:ok, domain_reg} = Regex.compile("^https?://[a-z0-9\-\.]*#{Regex.escape(domain)}")
+        parsed
+          # |> Floki.find("a[href*=\"#{domain}\"]")
+          |> Floki.find("a")
+          |> Floki.attribute("href")
+          |> Enum.map(fn(url) ->
+            if String.match?(url, domain_reg) do
+              %{host: host, scheme: scheme} = URI.parse(url)
+              "#{scheme}://#{host}"
+            else
+              nil
+            end
+          end)
+          |> Enum.reject(&is_nil/1)
+          |> Enum.uniq
+          |> Enum.reduce(accum1, fn(base_url, accum2) ->
+            IO.puts "replacing: #{base_url}"
+            accum2 |> String.replace(base_url, "http://localhost:4001")
+          end)
+      end)
   end
 end
