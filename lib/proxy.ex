@@ -52,14 +52,16 @@ defmodule Proxy do
   def update_html(html) do
     parsed = html |> Floki.parse
 
+    hrefs = parsed
+      |> Floki.find("a")
+      |> Floki.attribute("href")
+
     # Itterate over domains to replace
     ["bbc.com"]
       |> Enum.reduce(html, fn(domain, accum1) ->
         {:ok, domain_reg} = Regex.compile("^https?://[a-z0-9\-\.]*#{Regex.escape(domain)}")
-        parsed
-          # |> Floki.find("a[href*=\"#{domain}\"]")
-          |> Floki.find("a")
-          |> Floki.attribute("href")
+
+        hrefs
           |> Enum.map(fn(url) ->
             if String.match?(url, domain_reg) do
               %{host: host, scheme: scheme} = URI.parse(url)
